@@ -2,7 +2,7 @@
   "name": "mnemosyne",
   "version": "0.1.0",
   "description": "Replay Claude Code sessions as an animated timeline — code changes play back in an editor alongside Claude's reasoning.",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "bin": {
     "mnemosyne": "dist/cli.js"
@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run build --prefix web",
     "build:server": "tsc -p tsconfig.json",
-    "dev": "tsx src/cli.ts --no-open",
+    "dev": "tsx src/cli.ts --no-open --port 4573",
     "test": "tsx --test tests/*.test.ts",
     "summary": "tsx src/cli.ts summary"
   },

@@ -16,6 +16,10 @@ export interface Playback {
   index: number; // -1 = before first event
   current?: FlatEvent;
   snapshot: Snapshot;
+  /** State immediately before the current event — the true "before" for
+   *  any before/after diffing the UI wants to do (e.g. CodePanel's
+   *  pre-edit flash), rather than hand-inverting the edit. */
+  prevSnapshot: Snapshot;
   playing: boolean;
   speed: Speed;
   /** Set while paused on a turn-boundary interstitial card. */
@@ -41,6 +45,7 @@ export function usePlayback(timeline: Timeline | undefined): Playback {
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   const snapshot = useMemo(() => engine.stateAt(index), [engine, index]);
+  const prevSnapshot = useMemo(() => engine.stateAt(index - 1), [engine, index]);
   const current = index >= 0 ? events[index] : undefined;
 
   const clear = () => {
@@ -120,7 +125,7 @@ export function usePlayback(timeline: Timeline | undefined): Playback {
     setIndex((i) => (i >= events.length - 1 ? -1 : i)); // replay from start when at end
   }, [events.length]);
   const pause = useCallback(() => setPlaying(false), []);
-  const toggle = useCallback(() => setPlaying((p) => !p), []);
+  const toggle = useCallback(() => (playing ? pause() : play()), [playing, pause, play]);
 
   useEffect(() => clear, []);
 
@@ -129,6 +134,7 @@ export function usePlayback(timeline: Timeline | undefined): Playback {
     index,
     current,
     snapshot,
+    prevSnapshot,
     playing,
     speed,
     interstitial,

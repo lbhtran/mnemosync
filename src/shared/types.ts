@@ -94,6 +94,11 @@ export type FileEvent = FileEventBase &
     | { kind: 'bash'; command: string; output?: string; mutating: boolean }
     | { kind: 'subagent'; agentId: string; description: string }
     | { kind: 'other'; toolName: string; summary: string }
+    // A tool that mutates a file we don't have a precise diff for (e.g.
+    // MultiEdit, NotebookEdit, or any future tool taking file_path/
+    // notebook_path) — content isn't updated, but the file is marked
+    // approximate rather than silently left stale.
+    | { kind: 'mutate'; path: string; toolName: string }
   );
 
 export type FileEventKind = FileEvent['kind'];

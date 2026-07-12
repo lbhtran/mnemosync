@@ -82,6 +82,11 @@ ever sees.
   edit's `old_string` can't be found (e.g. a mutating bash command changed
   the file), the file is marked **≈ approximate** and the edit is shown as an
   isolated old→new diff — never silently-wrong content.
+- **Unrecognized file-mutating tools never go silently invisible.** A tool
+  we don't have explicit diff parsing for (e.g. MultiEdit, NotebookEdit, or
+  whatever ships next) is detected by its `file_path`/`notebook_path` input
+  and marked **≈ approximate** rather than leaving the file's displayed
+  content stale with no indication anything happened.
 - **Failed tool calls never mutate state.** They render with an error badge;
   retries and dead ends are part of the story.
 - **Compaction boundaries** (`system/compact_boundary`) are marked on the

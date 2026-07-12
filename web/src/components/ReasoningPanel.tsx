@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import type { FileEvent, Turn } from '../../../src/shared/types';
 
 marked.setOptions({ gfm: true, breaks: false });
@@ -15,6 +16,8 @@ function eventLabel(ev: FileEvent): string {
       return `👁 ${short(ev.path)}`;
     case 'delete':
       return `✕ ${short(ev.path)}`;
+    case 'mutate':
+      return `✱ ${short(ev.path)}`;
     case 'bash':
       return `● ${ev.command.split('\n')[0].slice(0, 48)}`;
     case 'subagent':
@@ -46,12 +49,8 @@ const ThinkingBlock = memo(function ThinkingBlock({ content }: { content: string
 });
 
 const TextBlock = memo(function TextBlock({ content }: { content: string }) {
-  return (
-    <div
-      className="text-block"
-      dangerouslySetInnerHTML={{ __html: marked.parse(content, { async: false }) as string }}
-    />
-  );
+  const html = DOMPurify.sanitize(marked.parse(content, { async: false }) as string);
+  return <div className="text-block" dangerouslySetInnerHTML={{ __html: html }} />;
 });
 
 const TurnCard = memo(function TurnCard({

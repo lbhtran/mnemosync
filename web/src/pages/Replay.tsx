@@ -123,6 +123,7 @@ export function Replay({
         />
         <CodePanel
           snapshot={playback.snapshot}
+          prevSnapshot={playback.prevSnapshot}
           currentEvent={playback.current?.event}
           animate={playback.animate}
           theme={theme}
