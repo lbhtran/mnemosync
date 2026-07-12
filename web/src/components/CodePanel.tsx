@@ -29,6 +29,8 @@ function actionMeta(event: FileEvent): { label: string; cls: string } | undefine
       return { label: '✚ writing', cls: 'write' };
     case 'delete':
       return { label: '✕ deleted', cls: 'delete' };
+    case 'mutate':
+      return { label: `✱ modified by ${event.toolName}`, cls: 'edit' };
     default:
       return undefined;
   }
@@ -79,6 +81,20 @@ function EventOverlay({ event }: { event: FileEvent }) {
       </div>
     );
   }
+  if (event.kind === 'mutate') {
+    return (
+      <div className={`event-overlay${event.isError ? ' err' : ''}`}>
+        <div>
+          ✱ <b>{event.toolName}</b> modified this file{event.isError ? ' ⚠ failed' : ''}
+        </div>
+        {!event.isError && (
+          <div style={{ color: 'var(--text-dim)', fontSize: 11, marginTop: 6 }}>
+            ⚠ no parsed diff for this tool — reconstructed content is approximate
+          </div>
+        )}
+      </div>
+    );
+  }
   if (event.kind === 'other') {
     return (
       <div className={`event-overlay${event.isError ? ' err' : ''}`}>
@@ -102,12 +118,14 @@ function EventOverlay({ event }: { event: FileEvent }) {
 
 export function CodePanel({
   snapshot,
+  prevSnapshot,
   currentEvent,
   animate,
   theme,
   interstitialPrompt,
 }: {
   snapshot: Snapshot;
+  prevSnapshot: Snapshot;
   currentEvent?: FileEvent;
   animate: boolean;
   theme: 'dark' | 'light';
@@ -173,11 +191,15 @@ export function CodePanel({
     };
 
     if (ev.kind === 'edit' && animate && ev.oldStr) {
-      const prevContent = ev.replaceAll
-        ? content.split(ev.newStr).join(ev.oldStr)
-        : content.replace(ev.newStr, ev.oldStr);
-      const removeRange = prevContent !== content ? changedRange(prevContent, ev.oldStr) : undefined;
-      if (removeRange) {
+      // Use the engine's actual prior state rather than hand-inverting the
+      // edit — inversion breaks for deletions (newStr === '') and for
+      // repeated snippets where the wrong occurrence gets un-replaced.
+      const prevContent = prevSnapshot.files.get(active)?.content;
+      const removeRange =
+        prevContent !== undefined && prevContent !== content
+          ? changedRange(prevContent, ev.oldStr)
+          : undefined;
+      if (prevContent !== undefined && removeRange) {
         setTransientOld({ forContent: content, value: prevContent });
         setDecoration({ range: removeRange, cls: 'removed-line' });
         const t = setTimeout(() => {
@@ -190,7 +212,7 @@ export function CodePanel({
     }
     const addRange = addRangeFor(content);
     setDecoration(addRange ? { range: addRange, cls: animate ? 'added-line' : 'added-line-instant' } : undefined);
-  }, [content, currentEvent, active, animate, showIsolatedDiff]);
+  }, [content, currentEvent, active, animate, showIsolatedDiff, prevSnapshot]);
 
   // Apply the decoration once Monaco's model has caught up to displayValue
   // (this effect runs after the child <Editor>'s own value-sync effect).

@@ -71,15 +71,20 @@ export class ReconstructionEngine {
     const target = Math.min(index, this.events.length - 1);
     if (target < 0) return { files: new Map() };
 
-    // Find nearest checkpoint at or before target.
+    // Find nearest checkpoint strictly before target — never target itself,
+    // so the loop below always applies at least the target event and
+    // produces a full snapshot (activeFile/isolatedDiff come from
+    // applyEvent, not from a bare checkpoint).
     let start = -1;
     let files = new Map<string, FileState>();
     for (let c = target - (target % this.interval); c >= 0; c -= this.interval) {
-      const cp = this.checkpoints.get(c);
-      if (cp && c <= target) {
-        start = c;
-        files = cloneFiles(cp);
-        break;
+      if (c < target) {
+        const cp = this.checkpoints.get(c);
+        if (cp) {
+          start = c;
+          files = cloneFiles(cp);
+          break;
+        }
       }
       if (c === 0) break;
     }
@@ -166,6 +171,15 @@ function applyEvent(files: Map<string, FileState>, ev: FileEvent): Snapshot {
             f.desynced = true;
           }
         }
+      }
+      break;
+    }
+    case 'mutate': {
+      snap.activeFile = ev.path;
+      if (!ev.isError) {
+        const f = ensure(files, ev.path);
+        f.everSeen = true;
+        f.desynced = true; // no parsed diff for this tool — approximate from here
       }
       break;
     }

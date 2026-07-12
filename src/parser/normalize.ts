@@ -99,8 +99,16 @@ interface ToolResultInfo {
 function extractToolResults(rec: RawRecord): Map<string, ToolResultInfo> {
   const out = new Map<string, ToolResultInfo>();
   const message = rec.message as { content?: unknown } | undefined;
-  for (const b of asBlocks(message?.content)) {
-    if (b.type !== 'tool_result') continue;
+  const resultBlocks = asBlocks(message?.content).filter((b) => b.type === 'tool_result');
+  // toolUseResult is a single record-level field; it only unambiguously
+  // belongs to a specific tool_result block when there's exactly one in
+  // this record. With more than one, attaching it to every block would
+  // silently cross-contaminate their reconstructed content.
+  const structured =
+    resultBlocks.length === 1 && rec.toolUseResult && typeof rec.toolUseResult === 'object'
+      ? (rec.toolUseResult as Record<string, unknown>)
+      : undefined;
+  for (const b of resultBlocks) {
     const id = str(b.tool_use_id);
     if (!id) continue;
     let text = '';
@@ -114,10 +122,7 @@ function extractToolResults(rec: RawRecord): Map<string, ToolResultInfo> {
     const isError = b.is_error === true;
     const info: ToolResultInfo = { isError, output: text };
     if (isError) info.errorMessage = truncate(text, 2000);
-    const structured = rec.toolUseResult;
-    if (structured && typeof structured === 'object') {
-      info.structured = structured as Record<string, unknown>;
-    }
+    if (structured) info.structured = structured;
     out.set(id, info);
   }
   return out;
@@ -170,6 +175,16 @@ function toolUseToEvent(
         description: str(input.description) ?? str(input.prompt)?.slice(0, 200) ?? '',
       };
     default: {
+      // Any unmapped tool that names a specific file/notebook (MultiEdit,
+      // NotebookEdit, or whatever ships next) mutates it without us having
+      // a precise diff. Classify by input shape, not a name allowlist, so
+      // reconstruction marks the file approximate instead of silently
+      // leaving it stale — and this stays correct for tools we've never
+      // heard of.
+      const mutatePath = str(input.file_path) ?? str(input.notebook_path);
+      if (mutatePath) {
+        return { ...base, kind: 'mutate', path: mutatePath, toolName: name };
+      }
       if (!KNOWN_OTHER_TOOLS.has(name)) warnings.push(`unmapped tool "${name}" rendered as generic event`);
       let summary = '';
       try {
@@ -186,8 +201,8 @@ function toolUseToEvent(
 const KNOWN_OTHER_TOOLS = new Set([
   'Grep', 'Glob', 'WebFetch', 'WebSearch', 'TodoWrite', 'TodoRead', 'Skill',
   'AskUserQuestion', 'ToolSearch', 'TaskCreate', 'TaskUpdate', 'TaskList',
-  'TaskGet', 'TaskOutput', 'TaskStop', 'NotebookEdit', 'ExitPlanMode',
-  'EnterPlanMode', 'SendMessage', 'Artifact', 'SendUserFile', 'MultiEdit',
+  'TaskGet', 'TaskOutput', 'TaskStop', 'ExitPlanMode',
+  'EnterPlanMode', 'SendMessage', 'Artifact', 'SendUserFile',
 ]);
 
 /** Merge structured toolUseResult data back into an event. */
@@ -251,10 +266,10 @@ export function normalize(
 
   // Interleaved writers (same session resumed twice) can produce
   // out-of-order timestamps; stable-sort conversation records only.
-  const conversational = records.filter(
-    (r) => r.type === 'user' || r.type === 'assistant' || r.type === 'system',
-  );
-  const metaRecords = records.filter((r) => !conversational.includes(r));
+  const isConversational = (r: RawRecord) =>
+    r.type === 'user' || r.type === 'assistant' || r.type === 'system';
+  const conversational = records.filter(isConversational);
+  const metaRecords = records.filter((r) => !isConversational(r));
   const sorted = [...conversational];
   let outOfOrder = false;
   for (let i = 1; i < sorted.length; i++) {

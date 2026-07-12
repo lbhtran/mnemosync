@@ -10,6 +10,7 @@ function markerFor(e: FlatEvent): { cls: string; glyph: string } | undefined {
     case 'edit':
     case 'write':
     case 'create':
+    case 'mutate':
       return { cls: 'edit', glyph: '▲' };
     case 'bash':
       return { cls: 'bash', glyph: '●' };
@@ -45,10 +46,14 @@ export function Scrubber({ playback }: { playback: Playback }) {
 
   const pct = n > 1 ? (Math.max(0, index) / (n - 1)) * 100 : 0;
 
-  // Compaction boundaries render at their first event position.
+  // Compaction boundaries render once, at their first event position.
+  const seenTurns = new Set<number>();
   const compactionAt = new Set<number>();
   for (const e of events) {
-    if (e.turn.isCompactionBoundary && !compactionAt.has(e.turnIndex)) compactionAt.add(e.eventIndex);
+    if (e.turn.isCompactionBoundary && !seenTurns.has(e.turnIndex)) {
+      seenTurns.add(e.turnIndex);
+      compactionAt.add(e.eventIndex);
+    }
   }
 
   return (

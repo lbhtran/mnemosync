@@ -30,10 +30,13 @@ export function listProjects(claudeDir: string): ProjectInfo[] {
     if (!st.isDirectory()) continue;
     const sessions = sessionFiles(dir);
     if (sessions.length === 0) continue;
-    const lastModified = sessions.reduce(
-      (max, f) => Math.max(max, statSync(f).mtimeMs),
-      0,
-    );
+    const lastModified = sessions.reduce((max, f) => {
+      try {
+        return Math.max(max, statSync(f).mtimeMs);
+      } catch {
+        return max; // vanished between readdir and stat
+      }
+    }, 0);
     projects.push({
       id: name,
       path: dir,
@@ -61,7 +64,13 @@ function sessionFiles(projectDir: string): string[] {
  *  to a naive dash→slash decode. */
 function decodeProjectPath(projectDir: string, encoded: string): string {
   const files = sessionFiles(projectDir)
-    .map((f) => ({ f, mtime: statSync(f).mtimeMs }))
+    .flatMap((f) => {
+      try {
+        return [{ f, mtime: statSync(f).mtimeMs }];
+      } catch {
+        return []; // vanished between readdir and stat
+      }
+    })
     .sort((a, b) => b.mtime - a.mtime);
   for (const { f } of files.slice(0, 3)) {
     try {
@@ -94,7 +103,12 @@ export async function listSessions(project: ProjectInfo): Promise<SessionInfo[]>
   const out: SessionInfo[] = [];
   for (const file of sessionFiles(project.path)) {
     const sessionId = basename(file, '.jsonl');
-    const st = statSync(file);
+    let st;
+    try {
+      st = statSync(file);
+    } catch {
+      continue; // vanished between readdir and stat
+    }
     const cached = sessionCache.get(file);
     if (cached && cached.mtimeMs === st.mtimeMs) {
       out.push(cached.info);

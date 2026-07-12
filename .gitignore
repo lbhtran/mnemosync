@@ -3,3 +3,4 @@ dist/
 web/dist/
 web/node_modules/
 web/public/vs/
+web/.vite/
