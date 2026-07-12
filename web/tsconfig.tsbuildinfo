@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/monacoSetup.ts","./src/components/CodePanel.tsx","./src/components/ReasoningPanel.tsx","./src/components/Scrubber.tsx","./src/pages/Picker.tsx","./src/pages/Replay.tsx","./src/playback/reconstruct.ts","./src/playback/usePlayback.ts","../src/shared/types.ts"],"version":"5.9.3"}
