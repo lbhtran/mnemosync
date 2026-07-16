@@ -55,6 +55,10 @@ function str(v: unknown): string | undefined {
   return typeof v === 'string' ? v : undefined;
 }
 
+function num(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+}
+
 function asBlocks(content: unknown): AnyBlock[] {
   return Array.isArray(content) ? (content as AnyBlock[]) : [];
 }
@@ -63,9 +67,15 @@ function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max) + `\n… [truncated, ${s.length} chars total]` : s;
 }
 
+function isOverLimit(s: string, max: number): boolean {
+  return s.length > max;
+}
+
 /** Extract the human prompt from a user record, or undefined if it is a
- *  tool-result carrier / meta record / injected content. */
-function extractUserPrompt(rec: RawRecord): string | undefined {
+ *  tool-result carrier / meta record / injected content. The only place
+ *  that knows this shape — discover.ts's session-list scan reuses this
+ *  rather than re-deriving its own (looser) filter. */
+export function extractUserPrompt(rec: RawRecord): string | undefined {
   if (rec.isMeta === true || rec.isCompactSummary === true) return undefined;
   const message = rec.message as { content?: unknown } | undefined;
   if (!message) return undefined;
@@ -142,10 +152,11 @@ function toolUseToEvent(
     case 'Write':
     case 'create_file': {
       const path = str(input.file_path) ?? str(input.path) ?? '';
-      const content = truncate(str(input.content) ?? '', MAX_FILE_CONTENT);
+      const raw = str(input.content) ?? '';
+      const content = truncate(raw, MAX_FILE_CONTENT);
       // create vs overwrite is resolved later once we know prior state;
       // default to 'write', reconstruction treats first-touch as create.
-      return { ...base, kind: 'write', path, content };
+      return { ...base, kind: 'write', path, content, truncated: isOverLimit(raw, MAX_FILE_CONTENT) };
     }
     case 'Edit':
     case 'str_replace':
@@ -161,7 +172,13 @@ function toolUseToEvent(
     }
     case 'Read':
     case 'view':
-      return { ...base, kind: 'read', path: str(input.file_path) ?? str(input.path) ?? '' };
+      return {
+        ...base,
+        kind: 'read',
+        path: str(input.file_path) ?? str(input.path) ?? '',
+        offset: num(input.offset),
+        limit: num(input.limit),
+      };
     case 'Bash': {
       const command = str(input.command) ?? '';
       return { ...base, kind: 'bash', command, mutating: MUTATING_BASH.test(command) };
@@ -219,12 +236,18 @@ function enrichEvent(ev: FileEvent, res: ToolResultInfo): FileEvent {
     ev.output = truncate([stdout, stderr].filter(Boolean).join('\n'), MAX_BASH_OUTPUT);
   } else if (ev.kind === 'edit' && s) {
     const orig = str(s.originalFile);
-    if (orig !== undefined) ev.baseContent = truncate(orig, MAX_FILE_CONTENT);
+    if (orig !== undefined) {
+      ev.baseContent = truncate(orig, MAX_FILE_CONTENT);
+      ev.baseContentTruncated = isOverLimit(orig, MAX_FILE_CONTENT);
+    }
     if (s.replaceAll === true) ev.replaceAll = true;
   } else if (ev.kind === 'read' && s) {
     const file = s.file as Record<string, unknown> | undefined;
     const content = str(file?.content);
-    if (content !== undefined) ev.content = truncate(content, MAX_FILE_CONTENT);
+    if (content !== undefined) {
+      ev.content = truncate(content, MAX_FILE_CONTENT);
+      ev.truncated = isOverLimit(content, MAX_FILE_CONTENT);
+    }
   } else if (ev.kind === 'subagent' && s) {
     const agentId = str(s.agentId) ?? str(s.taskId);
     if (agentId) ev.agentId = agentId;

@@ -4,6 +4,7 @@ import type { editor } from 'monaco-editor';
 import type { FileEvent } from '../../../src/shared/types';
 import type { Snapshot } from '../playback/reconstruct';
 import { languageFor, looksBinary } from '../monacoSetup';
+import { KIND_GLYPH } from '../eventMeta';
 
 const MAX_EDITOR_CHARS = 800_000; // huge files: truncate for rendering
 
@@ -20,17 +21,17 @@ function changedRange(content: string, needle: string): [number, number] | undef
 function actionMeta(event: FileEvent): { label: string; cls: string } | undefined {
   switch (event.kind) {
     case 'read':
-      return { label: '👁 reading', cls: 'read' };
+      return { label: `${KIND_GLYPH.read} reading`, cls: 'read' };
     case 'edit':
-      return { label: '✎ editing', cls: 'edit' };
+      return { label: `${KIND_GLYPH.edit} editing`, cls: 'edit' };
     case 'create':
-      return { label: '✚ created', cls: 'write' };
+      return { label: `${KIND_GLYPH.create} created`, cls: 'write' };
     case 'write':
-      return { label: '✚ writing', cls: 'write' };
+      return { label: `${KIND_GLYPH.write} writing`, cls: 'write' };
     case 'delete':
-      return { label: '✕ deleted', cls: 'delete' };
+      return { label: `${KIND_GLYPH.delete} deleted`, cls: 'delete' };
     case 'mutate':
-      return { label: `✱ modified by ${event.toolName}`, cls: 'edit' };
+      return { label: `${KIND_GLYPH.mutate} modified by ${event.toolName}`, cls: 'edit' };
     default:
       return undefined;
   }
@@ -187,6 +188,19 @@ export function CodePanel({
     const addRangeFor = (val: string): [number, number] | undefined => {
       if (ev.kind === 'edit') return changedRange(val, ev.newStr);
       if (ev.kind === 'create' || ev.kind === 'write') return [1, Math.min(val.split('\n').length, 40)];
+      if (ev.kind === 'read') {
+        const totalLines = val.split('\n').length;
+        if (!ev.offset && !ev.limit) return [1, Math.min(totalLines, 40)];
+        // val may be the whole file or just this read's own fragment
+        // (reconstruction keeps only the last-read window for files that
+        // were never fully written/edited) — contentOffset says which.
+        const base = file?.contentOffset ?? 1;
+        const absStart = ev.offset && ev.offset > 0 ? ev.offset : 1;
+        const absEnd = ev.limit ? absStart + ev.limit - 1 : absStart + totalLines - base;
+        const start = Math.max(1, Math.min(absStart - base + 1, totalLines));
+        const end = Math.max(start, Math.min(absEnd - base + 1, totalLines));
+        return [start, end];
+      }
       return undefined;
     };
 
@@ -211,8 +225,12 @@ export function CodePanel({
       }
     }
     const addRange = addRangeFor(content);
-    setDecoration(addRange ? { range: addRange, cls: animate ? 'added-line' : 'added-line-instant' } : undefined);
-  }, [content, currentEvent, active, animate, showIsolatedDiff, prevSnapshot]);
+    const isRead = ev.kind === 'read';
+    const cls = animate
+      ? isRead ? 'read-line' : 'added-line'
+      : isRead ? 'read-line-instant' : 'added-line-instant';
+    setDecoration(addRange ? { range: addRange, cls } : undefined);
+  }, [content, currentEvent, active, animate, showIsolatedDiff, prevSnapshot, file?.contentOffset]);
 
   // Apply the decoration once Monaco's model has caught up to displayValue
   // (this effect runs after the child <Editor>'s own value-sync effect).
@@ -265,7 +283,11 @@ export function CodePanel({
           <span className={`action-indicator ${activeAction.cls}`}>{activeAction.label}</span>
         )}
         {file?.desynced && !showIsolatedDiff && (
-          <div className="desync-banner">≈ state approximate</div>
+          <div className="desync-banner">
+            {file.desyncReason === 'truncated'
+              ? '≈ content was truncated at 2MB — this edit likely landed past what we captured'
+              : '≈ state approximate'}
+          </div>
         )}
         {showIsolatedDiff && snapshot.isolatedDiff ? (
           <>

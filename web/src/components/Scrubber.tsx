@@ -1,19 +1,20 @@
 import { useCallback, useRef } from 'react';
 import type { FlatEvent } from '../playback/reconstruct';
 import type { Playback, Speed } from '../playback/usePlayback';
+import { ERROR_GLYPH, KIND_GLYPH } from '../eventMeta';
 
 const SPEEDS: Speed[] = [0.5, 1, 2, 4];
 
 function markerFor(e: FlatEvent): { cls: string; glyph: string } | undefined {
-  if (e.event.isError) return { cls: 'err', glyph: '◆' };
+  if (e.event.isError) return { cls: 'err', glyph: ERROR_GLYPH };
   switch (e.event.kind) {
     case 'edit':
     case 'write':
     case 'create':
     case 'mutate':
-      return { cls: 'edit', glyph: '▲' };
+      return { cls: 'edit', glyph: KIND_GLYPH[e.event.kind] };
     case 'bash':
-      return { cls: 'bash', glyph: '●' };
+      return { cls: 'bash', glyph: KIND_GLYPH.bash };
     default:
       return undefined;
   }
@@ -113,9 +114,9 @@ export function Scrubber({ playback }: { playback: Playback }) {
         <div className="playhead" style={{ left: `${pct}%` }} />
       </div>
       <div className="legend">
-        <span style={{ color: 'var(--accent)' }}>▲ edits</span>
-        <span style={{ color: 'var(--bash)' }}>● bash</span>
-        <span style={{ color: 'var(--error)' }}>◆ errors</span>
+        <span style={{ color: 'var(--accent)' }}>{KIND_GLYPH.edit}{KIND_GLYPH.write}{KIND_GLYPH.mutate} edits</span>
+        <span style={{ color: 'var(--bash)' }}>{KIND_GLYPH.bash} bash</span>
+        <span style={{ color: 'var(--error)' }}>{ERROR_GLYPH} errors</span>
         <span style={{ color: 'var(--thinking)' }}>│ compaction</span>
       </div>
     </div>

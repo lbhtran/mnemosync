@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import type { FileEvent, Turn } from '../../../src/shared/types';
+import { KIND_GLYPH } from '../eventMeta';
 
 marked.setOptions({ gfm: true, breaks: false });
 
@@ -9,21 +10,17 @@ function eventLabel(ev: FileEvent): string {
   switch (ev.kind) {
     case 'create':
     case 'write':
-      return `✚ ${short(ev.path)}`;
     case 'edit':
-      return `▲ ${short(ev.path)}`;
     case 'read':
-      return `👁 ${short(ev.path)}`;
     case 'delete':
-      return `✕ ${short(ev.path)}`;
     case 'mutate':
-      return `✱ ${short(ev.path)}`;
+      return `${KIND_GLYPH[ev.kind]} ${short(ev.path)}`;
     case 'bash':
-      return `● ${ev.command.split('\n')[0].slice(0, 48)}`;
+      return `${KIND_GLYPH.bash} ${ev.command.split('\n')[0].slice(0, 48)}`;
     case 'subagent':
-      return `⛭ agent: ${ev.description.slice(0, 40)}`;
+      return `${KIND_GLYPH.subagent} agent: ${ev.description.slice(0, 40)}`;
     default:
-      return `◦ ${ev.toolName}`;
+      return `${KIND_GLYPH.other} ${ev.toolName}`;
   }
 }
 

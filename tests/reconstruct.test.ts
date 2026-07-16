@@ -65,6 +65,8 @@ function naiveStateAt(events: ReturnType<typeof flattenEvents>, index: number) {
         const base = p.split('/').pop() ?? p;
         if (e.command.includes(p) || (base.length > 3 && e.command.includes(base))) f.desynced = true;
       }
+    } else if (e.kind === 'mutate') {
+      Object.assign(get(e.path), { everSeen: true, desynced: true });
     }
   }
   return files;
@@ -141,7 +143,7 @@ test('reconstruct: desynced edit shows isolated diff, later baseContent re-syncs
   assert.match(after.files.get('/x.py')!.content, /renamed/);
 });
 
-test('reconstruct: real session scrubbing is engine≡naive (skipped if none found)', (t) => {
+test('reconstruct: real session scrubbing is engine≡naive (skipped if none found)', async (t) => {
   const dir = join(homedir(), '.claude', 'projects');
   if (!existsSync(dir)) return t.skip('no ~/.claude/projects');
   // biggest transcript available
@@ -156,7 +158,7 @@ test('reconstruct: real session scrubbing is engine≡naive (skipped if none fou
     }
   }
   if (!best) return t.skip('no sessions');
-  const { records, warnings } = parseJsonlFile(best.file);
+  const { records, warnings } = await parseJsonlFile(best.file);
   const timeline = normalize(records, warnings);
   const events = flattenEvents(timeline);
   if (events.length < 10) return t.skip('too few events');

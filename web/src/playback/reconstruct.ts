@@ -23,7 +23,21 @@ export interface FlatEvent {
 export interface FileState {
   content: string;
   desynced: boolean;
+  // Why desynced is true, so the UI can tell "we genuinely lost track of
+  // this file" (unmatched/approximate) apart from "content was cut at the
+  // 2MB cap, so an edit's oldStr search failing here doesn't mean the real
+  // edit failed too" (truncated).
+  desyncReason?: 'truncated' | 'unmatched' | 'approximate';
   everSeen: boolean; // false = we only know the path, never its content
+  // content itself was cut at MAX_FILE_CONTENT — not the whole read
+  // fragment/file the tool actually saw.
+  truncated?: boolean;
+  // 1-based line number that content[0] corresponds to in the real file.
+  // A partial Read (offset/limit) makes content just that fragment, so
+  // callers mapping an absolute line (e.g. another read's offset) onto
+  // content need this to translate. Undefined/1 = content starts at line 1
+  // (whole file, or an offset-less read/write).
+  contentOffset?: number;
 }
 
 export interface Snapshot {
@@ -115,13 +129,17 @@ function applyEvent(files: Map<string, FileState>, ev: FileEvent): Snapshot {
   switch (ev.kind) {
     case 'read': {
       snap.activeFile = ev.path;
-      if (ev.isError) break;
+      // No captured content (e.g. an image read) shouldn't register a
+      // phantom empty file entry — only a read we actually have text for
+      // tells us anything about the file's state.
+      if (ev.isError || ev.content === undefined) break;
       const f = ensure(files, ev.path);
-      if (ev.content !== undefined) {
-        f.content = ev.content;
-        f.everSeen = true;
-        f.desynced = false; // fresh read is ground truth
-      }
+      f.content = ev.content;
+      f.everSeen = true;
+      f.desynced = false; // fresh read is ground truth
+      f.desyncReason = undefined;
+      f.truncated = ev.truncated ?? false;
+      f.contentOffset = ev.offset && ev.offset > 0 ? ev.offset : 1;
       break;
     }
     case 'create':
@@ -132,6 +150,9 @@ function applyEvent(files: Map<string, FileState>, ev: FileEvent): Snapshot {
       f.content = ev.content;
       f.everSeen = true;
       f.desynced = false;
+      f.desyncReason = undefined;
+      f.truncated = ev.truncated ?? false;
+      f.contentOffset = 1;
       break;
     }
     case 'edit': {
@@ -143,17 +164,26 @@ function applyEvent(files: Map<string, FileState>, ev: FileEvent): Snapshot {
         f.content = ev.baseContent;
         f.everSeen = true;
         f.desynced = false;
+        f.desyncReason = undefined;
+        f.truncated = ev.baseContentTruncated ?? false;
+        f.contentOffset = 1;
       }
       if (f.everSeen && f.content.includes(ev.oldStr) && ev.oldStr !== '') {
         f.content = ev.replaceAll
           ? f.content.split(ev.oldStr).join(ev.newStr)
           : f.content.replace(ev.oldStr, ev.newStr);
         f.desynced = false;
+        f.desyncReason = undefined;
       } else if (ev.oldStr === '' && !f.everSeen) {
         f.content = ev.newStr; // create-via-empty-edit
         f.everSeen = true;
+        f.contentOffset = 1;
       } else {
         f.desynced = true;
+        // oldStr not found is expected (not a real conflict) when our
+        // content is a truncated fragment — the real edit likely landed
+        // past the cutoff, where we simply can't see it.
+        f.desyncReason = f.truncated ? 'truncated' : 'unmatched';
         snap.isolatedDiff = { path: ev.path, oldStr: ev.oldStr, newStr: ev.newStr };
       }
       break;
@@ -169,6 +199,7 @@ function applyEvent(files: Map<string, FileState>, ev: FileEvent): Snapshot {
           const base = path.split('/').pop() ?? path;
           if (ev.command.includes(path) || (base.length > 3 && ev.command.includes(base))) {
             f.desynced = true;
+            f.desyncReason = 'approximate';
           }
         }
       }
@@ -180,6 +211,7 @@ function applyEvent(files: Map<string, FileState>, ev: FileEvent): Snapshot {
         const f = ensure(files, ev.path);
         f.everSeen = true;
         f.desynced = true; // no parsed diff for this tool — approximate from here
+        f.desyncReason = 'approximate';
       }
       break;
     }

@@ -77,7 +77,7 @@ interface FileEventBase {
 
 export type FileEvent = FileEventBase &
   (
-    | { kind: 'create'; path: string; content: string }
+    | { kind: 'create'; path: string; content: string; truncated?: boolean }
     | {
         kind: 'edit';
         path: string;
@@ -87,10 +87,22 @@ export type FileEvent = FileEventBase &
         // Full pre-edit file content when the transcript recorded it
         // (toolUseResult.originalFile). Ground truth for reconstruction.
         baseContent?: string;
+        // baseContent was cut at MAX_FILE_CONTENT — an oldStr search that
+        // fails to match may just be past the cutoff, not a real desync.
+        baseContentTruncated?: boolean;
       }
-    | { kind: 'write'; path: string; content: string }
+    | { kind: 'write'; path: string; content: string; truncated?: boolean }
     | { kind: 'delete'; path: string }
-    | { kind: 'read'; path: string; content?: string }
+    | {
+        kind: 'read';
+        path: string;
+        content?: string;
+        offset?: number;
+        limit?: number;
+        // content was cut at MAX_FILE_CONTENT rather than reflecting the
+        // whole read fragment/file.
+        truncated?: boolean;
+      }
     | { kind: 'bash'; command: string; output?: string; mutating: boolean }
     | { kind: 'subagent'; agentId: string; description: string }
     | { kind: 'other'; toolName: string; summary: string }

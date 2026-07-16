@@ -7,13 +7,13 @@ import { normalize } from '../src/parser/normalize.js';
 
 const fixtures = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'src', 'parser', 'fixtures');
 
-function loadBasic() {
-  const { records, warnings } = parseJsonlFile(join(fixtures, 'basic-session.jsonl'));
+async function loadBasic() {
+  const { records, warnings } = await parseJsonlFile(join(fixtures, 'basic-session.jsonl'));
   return { records, warnings, timeline: normalize(records, warnings) };
 }
 
-test('parse: tolerates truncated final line and never throws', () => {
-  const { records, warnings } = loadBasic();
+test('parse: tolerates truncated final line and never throws', async () => {
+  const { records, warnings } = await loadBasic();
   assert.ok(records.length > 10);
   assert.ok(warnings.some((w) => w.includes('final line')));
 });
@@ -24,8 +24,8 @@ test('parse: skips garbage lines with warnings', () => {
   assert.equal(warnings.length, 3);
 });
 
-test('normalize: extracts session meta', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: extracts session meta', async () => {
+  const { timeline: t } = await loadBasic();
   assert.equal(t.meta.sessionId, '11111111-2222-3333-4444-555555555555');
   assert.equal(t.meta.projectPath, '/home/dev/example-app');
   assert.equal(t.meta.model, 'claude-fable-5');
@@ -37,8 +37,8 @@ test('normalize: extracts session meta', () => {
   ]);
 });
 
-test('normalize: groups think→act cycles into turns with user prompts', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: groups think→act cycles into turns with user prompts', async () => {
+  const { timeline: t } = await loadBasic();
   assert.ok(t.turns.length >= 3);
   const first = t.turns[0];
   assert.equal(first.userPrompt, 'Add a --verbose flag to the CLI');
@@ -50,8 +50,8 @@ test('normalize: groups think→act cycles into turns with user prompts', () => 
   assert.notEqual(bashTurn, first);
 });
 
-test('normalize: edit events carry oldStr/newStr and originalFile base', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: edit events carry oldStr/newStr and originalFile base', async () => {
+  const { timeline: t } = await loadBasic();
   const edit = t.turns.flatMap((x) => x.events).find((e) => e.kind === 'edit');
   assert.ok(edit && edit.kind === 'edit');
   assert.equal(edit.path, '/home/dev/example-app/cli.py');
@@ -59,15 +59,15 @@ test('normalize: edit events carry oldStr/newStr and originalFile base', () => {
   assert.match(edit.baseContent ?? '', /^import argparse/);
 });
 
-test('normalize: read events carry revealed content', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: read events carry revealed content', async () => {
+  const { timeline: t } = await loadBasic();
   const read = t.turns.flatMap((x) => x.events).find((e) => e.kind === 'read');
   assert.ok(read && read.kind === 'read');
   assert.match(read.content ?? '', /argparse/);
 });
 
-test('normalize: bash output attached, non-mutating test command not flagged', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: bash output attached, non-mutating test command not flagged', async () => {
+  const { timeline: t } = await loadBasic();
   const bashes = t.turns.flatMap((x) => x.events).filter((e) => e.kind === 'bash');
   assert.ok(bashes.length >= 2);
   const pytest = bashes.find((b) => b.kind === 'bash' && b.command.includes('pytest'));
@@ -76,22 +76,22 @@ test('normalize: bash output attached, non-mutating test command not flagged', (
   assert.match(pytest.output ?? '', /2 passed/);
 });
 
-test('normalize: is_error results are badged, never enriched as success', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: is_error results are badged, never enriched as success', async () => {
+  const { timeline: t } = await loadBasic();
   const err = t.turns.flatMap((x) => x.events).find((e) => e.isError);
   assert.ok(err);
   assert.match(err.errorMessage ?? '', /unrecognized arguments/);
 });
 
-test('normalize: compaction boundary marks the following turn', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: compaction boundary marks the following turn', async () => {
+  const { timeline: t } = await loadBasic();
   const boundary = t.turns.find((x) => x.isCompactionBoundary);
   assert.ok(boundary);
   assert.equal(boundary.userPrompt, 'Also write a README section for it');
 });
 
-test('normalize: unknown record types warn instead of crashing', () => {
-  const { timeline: t } = loadBasic();
+test('normalize: unknown record types warn instead of crashing', async () => {
+  const { timeline: t } = await loadBasic();
   assert.ok(t.meta.parseWarnings.some((w) => w.includes('mystery-future-record')));
 });
 
