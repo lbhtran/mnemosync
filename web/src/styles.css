@@ -16,6 +16,7 @@
   --thinking: #b083f0;
   --ok-dim: #57ab5a4d;
   --error-dim: #e5534b59;
+  --bash-dim: #6cb6ff40;
   --mono: ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
 }
 
@@ -34,6 +35,7 @@
   --thinking: #7b4fc0;
   --ok-dim: #3a7d3d40;
   --error-dim: #c53a3245;
+  --bash-dim: #2b6cb040;
 }
 
 * { box-sizing: border-box; }
@@ -190,6 +192,9 @@ input:focus { border-color: var(--accent); }
 .added-line-instant { background: var(--ok-dim); }
 @keyframes fadeAdded { from { background: var(--ok-dim); } to { background: transparent; } }
 .removed-line { background: var(--error-dim); }
+.read-line { background: var(--bash-dim); animation: fadeRead 1.6s ease-out forwards; }
+.read-line-instant { background: var(--bash-dim); }
+@keyframes fadeRead { from { background: var(--bash-dim); } to { background: transparent; } }
 
 /* action indicator: what Claude is doing to the active file right now.
    Overlaid on the editor (not the scrolling tab strip) so it stays visible

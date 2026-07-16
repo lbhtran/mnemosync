@@ -34,16 +34,16 @@ interface TimelineCacheEntry {
 const timelineCache = new Map<string, TimelineCacheEntry>();
 const TIMELINE_CACHE_MAX = 8;
 
-function buildTimeline(
+async function buildTimeline(
   file: string,
   sessionId: string,
   projectDir?: string,
   includeSidechain = false,
-): Timeline {
+): Promise<Timeline> {
   const st = statSync(file);
   const cached = timelineCache.get(file);
   if (cached && cached.mtimeMs === st.mtimeMs) return cached.timeline;
-  const { records, warnings } = parseJsonlFile(file);
+  const { records, warnings } = await parseJsonlFile(file);
   const subagents = projectDir ? listSubagents(projectDir, sessionId) : [];
   const timeline = normalize(records, warnings, { sessionId, subagents, includeSidechain });
   timelineCache.set(file, { mtimeMs: st.mtimeMs, timeline });
@@ -133,7 +133,7 @@ async function handle(
     const sessionId = decodeURIComponent(m[1]);
     const found = resolveSessionFile(claudeDir, sessionId);
     if (!found) return sendJson(res, 404, { error: 'session not found' });
-    const timeline = buildTimeline(found.file, sessionId, found.projectDir);
+    const timeline = await buildTimeline(found.file, sessionId, found.projectDir);
     const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
     const limit = Math.min(1000, Math.max(1, Number(url.searchParams.get('limit')) || 200));
     return sendJson(res, 200, paginate(timeline, offset, limit));
@@ -145,7 +145,7 @@ async function handle(
     const agentId = decodeURIComponent(m[2]);
     const file = resolveSubagentFile(claudeDir, sessionId, agentId);
     if (!file) return sendJson(res, 404, { error: 'subagent not found' });
-    const timeline = buildTimeline(file, `${sessionId}/${agentId}`, undefined, true);
+    const timeline = await buildTimeline(file, `${sessionId}/${agentId}`, undefined, true);
     const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
     const limit = Math.min(1000, Math.max(1, Number(url.searchParams.get('limit')) || 200));
     return sendJson(res, 200, paginate(timeline, offset, limit));

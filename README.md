@@ -57,7 +57,9 @@ Restart=on-failure
 CLI  →  local HTTP server (Node ≥18, zero runtime deps)
           ├─ src/parser/   ★ ALL JSONL format knowledge lives here
           │    discover.ts   find projects/sessions/subagents under ~/.claude
-          │    parse.ts      defensive JSONL → raw records (never crashes)
+          │    parse.ts      defensive, streamed JSONL → raw records (never
+          │                  crashes, never loads a multi-hundred-MB
+          │                  transcript fully into memory)
           │    normalize.ts  raw records → Timeline/Turn/FileEvent schema
           └─ src/server/   REST API + static frontend
         →  web/ (React + Vite + Monaco)
@@ -79,9 +81,12 @@ ever sees.
   as interstitial cards at turn boundaries.
 - **Ground-truth reconstruction.** Edit results in transcripts carry the full
   pre-edit file (`originalFile`), so file state is usually exact. When an
-  edit's `old_string` can't be found (e.g. a mutating bash command changed
-  the file), the file is marked **≈ approximate** and the edit is shown as an
-  isolated old→new diff — never silently-wrong content.
+  edit's `old_string` can't be found, the file is marked **≈ approximate**
+  and the edit is shown as an isolated old→new diff — never silently-wrong
+  content. The approximate banner distinguishes *why*: content cut at the
+  2MB capture cap (the edit likely landed past what we captured) reads
+  differently from a genuine desync (e.g. a mutating bash command changed
+  the file from underneath us).
 - **Unrecognized file-mutating tools never go silently invisible.** A tool
   we don't have explicit diff parsing for (e.g. MultiEdit, NotebookEdit, or
   whatever ships next) is detected by its `file_path`/`notebook_path` input
@@ -96,10 +101,16 @@ ever sees.
 ### Visual language
 
 - A badge on the code panel names what's happening to the open file right
-  now: `👁 reading`, `✎ editing`, `✚ writing`/`created`, `✕ deleted`.
+  now: `👁 reading`, `✎ editing`, `✚ writing`/`created`, `✕ deleted`. The same
+  glyph for a given event kind is used consistently across the scrubber
+  track, reasoning panel, and code panel badge (`web/src/eventMeta.ts` is the
+  single source of truth), so the same action never looks different
+  depending which panel you're looking at.
 - Added lines glow green and fade. An edit's old text flashes red in place
   for a beat before the swap, so add vs. remove reads at a glance instead of
-  just "something changed".
+  just "something changed". Reads get their own brief blue highlight over
+  the lines actually revealed — including the correct sub-range for a
+  windowed `Read` with `offset`/`limit`, not just the top of the file.
 
 ### Keyboard
 

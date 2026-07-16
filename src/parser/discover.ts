@@ -7,6 +7,8 @@ import { createInterface } from 'node:readline';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import type { ProjectInfo, SessionInfo, SubagentInfo } from '../shared/types.js';
+import type { RawRecord } from './parse.js';
+import { extractUserPrompt } from './normalize.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AGENT_ID_RE = /^[A-Za-z0-9_-]+$/;
@@ -183,17 +185,9 @@ async function scanSession(file: string): Promise<ScanResult> {
       if (!res.startedAt && typeof rec.timestamp === 'string') res.startedAt = rec.timestamp;
       if (!res.gitBranch && typeof rec.gitBranch === 'string' && rec.gitBranch)
         res.gitBranch = rec.gitBranch;
-      if (!res.firstPrompt && rec.type === 'user' && !rec.isMeta) {
-        const c = rec.message?.content;
-        let text: string | undefined;
-        if (typeof c === 'string') text = c;
-        else if (Array.isArray(c)) {
-          const t = c.find((b: any) => b?.type === 'text');
-          if (t?.text) text = t.text;
-        }
-        if (text && !/^<|^Caveat:/.test(text.trim()) && text.trim()) {
-          res.firstPrompt = text.trim().slice(0, 120);
-        }
+      if (!res.firstPrompt && rec.type === 'user') {
+        const prompt = extractUserPrompt(rec as RawRecord);
+        if (prompt) res.firstPrompt = prompt.slice(0, 120);
       }
     } else if (rec.type === 'ai-title' && typeof rec.aiTitle === 'string') {
       res.summary = rec.aiTitle; // last one wins

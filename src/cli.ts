@@ -68,7 +68,7 @@ function openBrowser(url: string): void {
     .unref();
 }
 
-function summarize(args: Args): void {
+async function summarize(args: Args): Promise<void> {
   const target = args.positional[0];
   if (!target) {
     console.error('usage: mnemosyne summary <session-id|path.jsonl>');
@@ -83,7 +83,7 @@ function summarize(args: Args): void {
     }
     file = found.file;
   }
-  const { records, warnings } = parseJsonlFile(file);
+  const { records, warnings } = await parseJsonlFile(file);
   const t = normalize(records, warnings, { sessionId: basename(file, '.jsonl') });
   const counts: Record<string, number> = {};
   for (const turn of t.turns) for (const ev of turn.events) counts[ev.kind] = (counts[ev.kind] ?? 0) + 1;
