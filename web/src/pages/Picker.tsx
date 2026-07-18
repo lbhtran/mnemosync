@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ProjectInfo, SessionInfo } from '../../../src/shared/types';
 import { fetchProjects, fetchSessions } from '../api';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -12,7 +13,13 @@ function fmtSize(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-export function Picker({ theme, onToggleTheme }: { theme: string; onToggleTheme: () => void }) {
+export function Picker({
+  theme,
+  onToggleTheme,
+}: {
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
+}) {
   const [projects, setProjects] = useState<ProjectInfo[]>();
   const [sessions, setSessions] = useState<Record<string, SessionInfo[]>>({});
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -53,19 +60,27 @@ export function Picker({ theme, onToggleTheme }: { theme: string; onToggleTheme:
   if (error) {
     return (
       <div className="error-page">
+        <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
         <div>mnemosyne</div>
         <div className="msg">{error}</div>
       </div>
     );
   }
-  if (!projects) return <div className="loading">discovering sessions…</div>;
+  if (!projects) {
+    return (
+      <div className="loading">
+        <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
+        discovering sessions…
+      </div>
+    );
+  }
 
   return (
     <div className="picker">
       <div style={{ display: 'flex', alignItems: 'baseline' }}>
         <h1>mnemosyne</h1>
         <span className="spacer" style={{ flex: 1 }} />
-        <button onClick={onToggleTheme}>{theme === 'dark' ? '☀ light' : '☾ dark'}</button>
+        <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} />
       </div>
       <div className="tagline">
         memory, replayed — pick a session to watch what Claude changed and why

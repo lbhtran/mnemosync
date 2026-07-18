@@ -18,3 +18,4 @@ export const KIND_GLYPH: Record<FileEventKind, string> = {
 };
 
 export const ERROR_GLYPH = '◆';
+export const WARN_GLYPH = '⚠';

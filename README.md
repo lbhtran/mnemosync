@@ -111,6 +111,21 @@ ever sees.
   just "something changed". Reads get their own brief blue highlight over
   the lines actually revealed — including the correct sub-range for a
   windowed `Read` with `offset`/`limit`, not just the top of the file.
+- The light/dark toggle (`web/src/components/ThemeToggle.tsx`) is present on
+  every screen the app can render — picker, replay, and both pages' loading
+  and error states — not just the fully-loaded view.
+- The replay header is split into three rows: navigation (top-left) and the
+  theme toggle (top-right) on the first row, the session title alone on the
+  second, and secondary metadata (project path, timestamp, model, branch,
+  turn/event counts) on a third — so the toggle stays reachable and a long
+  session title doesn't crowd it out.
+- An unrecognized tool rendered as a generic event (`⚠`, legend: "unrecognized
+  tool") gets its own scrubber marker, distinct from the edit/bash/error
+  markers — it's the one parser diagnostic that maps onto an actual replay
+  moment. The rest of `meta.parseWarnings` (malformed/skipped lines, unknown
+  record types, an out-of-order re-sort) describe lines that never became an
+  event at all, so there's nowhere in the replay to point to them; they're
+  logged to the browser console instead of shown in the UI.
 
 ### Keyboard
 
