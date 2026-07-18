@@ -88,20 +88,46 @@ input:focus { border-color: var(--accent); }
 .code-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
 
 /* ---------- header ---------- */
+/* identity row: nav on the left, theme toggle (and future settings) pinned
+   top-right */
 .app-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-raised);
   white-space: nowrap;
-  overflow: hidden;
 }
 .app-header .brand { color: var(--accent); font-weight: 700; text-decoration: none; letter-spacing: 0.5px; }
-.app-header .title { overflow: hidden; text-overflow: ellipsis; }
-.app-header .meta { color: var(--text-dim); font-size: 12px; }
-.app-header .spacer { flex: 1; }
+
+/* session title gets its own row so it can wrap/ellipsis independently of
+   the nav and toggle above it */
+.title-bar {
+  padding: 4px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+.title-bar .title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* session metadata row */
+.settings-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+  white-space: nowrap;
+}
+.settings-bar .meta { color: var(--text-dim); font-size: 12px; }
 
 /* ---------- picker ---------- */
 .picker { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
@@ -268,6 +294,7 @@ input:focus { border-color: var(--accent); }
 .track .marker.edit { color: var(--accent); }
 .track .marker.bash { color: var(--bash); }
 .track .marker.err { color: var(--error); font-size: 11px; }
+.track .marker.warn { color: var(--accent); font-size: 11px; }
 .track .marker.compact { color: var(--thinking); font-size: 13px; }
 .track .playhead {
   position: absolute; top: -3px; bottom: -3px; width: 2px;
@@ -276,9 +303,11 @@ input:focus { border-color: var(--accent); }
 .legend { display: flex; gap: 14px; font-size: 10.5px; color: var(--text-dim); margin-top: 5px; }
 
 .loading, .error-page {
+  position: relative;
   height: 100vh; display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 10px; color: var(--text-dim);
 }
+.loading .theme-toggle, .error-page .theme-toggle { position: absolute; top: 14px; right: 14px; }
 .error-page .msg { color: var(--error); max-width: 600px; text-align: center; }
 kbd {
   border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px;
@@ -297,11 +326,12 @@ kbd {
   .mobile-tabs button { flex: 1; padding: 7px 0; }
   .mobile-tabs button.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
 
-  /* header: keep brand/title/theme toggle, drop secondary meta to one row */
-  .app-header { flex-wrap: wrap; gap: 6px 10px; padding: 8px 10px; }
-  .app-header .title { flex: 1 1 auto; min-width: 0; }
-  .app-header .meta-optional { display: none; }
-  .app-header .spacer { flex-basis: 100%; height: 0; }
+  /* header: nav + toggle only; title gets its own row; settings bar drops
+     secondary meta */
+  .app-header { padding: 8px 10px; }
+  .title-bar { padding: 4px 10px; }
+  .settings-bar { padding: 6px 10px; }
+  .settings-bar .meta-optional { display: none; }
 
   /* stack panels; only the active one (driven by data-mobile-view) is shown */
   .replay-main { flex-direction: column; }

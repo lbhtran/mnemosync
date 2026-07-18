@@ -5,6 +5,7 @@ import { usePlayback } from '../playback/usePlayback';
 import { ReasoningPanel } from '../components/ReasoningPanel';
 import { CodePanel } from '../components/CodePanel';
 import { Scrubber } from '../components/Scrubber';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export function Replay({
   sessionId,
@@ -23,7 +24,19 @@ export function Replay({
   const playback = usePlayback(timeline);
 
   useEffect(() => {
-    fetchTimeline(sessionId, agentId).then(setTimeline).catch((e) => setError(String(e)));
+    fetchTimeline(sessionId, agentId)
+      .then((t) => {
+        setTimeline(t);
+        // Parser-level diagnostics (skipped/malformed lines, unknown record
+        // types, timestamp re-sorts) don't map onto a replay moment — no
+        // event exists for a line that failed to parse — so there's nowhere
+        // meaningful to show them in the UI. Console is for debugging a
+        // parser issue, not a user-facing signal.
+        if (t.meta.parseWarnings.length > 0) {
+          console.warn(`mnemosyne: ${t.meta.parseWarnings.length} parse warning(s) for this session:`, t.meta.parseWarnings);
+        }
+      })
+      .catch((e) => setError(String(e)));
   }, [sessionId, agentId]);
 
   // Keyboard: space play/pause, ←/→ step event, shift+←/→ step turn.
@@ -55,6 +68,7 @@ export function Replay({
   if (error)
     return (
       <div className="error-page">
+        <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
         <div>mnemosyne</div>
         <div className="msg">{error}</div>
         <a href="#/" style={{ color: 'var(--accent)' }}>
@@ -62,7 +76,14 @@ export function Replay({
         </a>
       </div>
     );
-  if (!timeline) return <div className="loading">parsing session…</div>;
+  if (!timeline) {
+    return (
+      <div className="loading">
+        <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
+        parsing session…
+      </div>
+    );
+  }
 
   const { meta } = timeline;
   const activeTurnIndex = playback.current?.turnIndex ?? -1;
@@ -82,24 +103,22 @@ export function Replay({
         <a className="brand" href={agentId ? `#/s/${sessionId}` : '#/'}>
           {agentId ? '← session' : '← mnemosyne'}
         </a>
+        <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
+      </header>
+      <div className="title-bar">
         <span className="title">
           {agentId ? `subagent ${agentId}` : (meta.summary ?? meta.sessionId)}
         </span>
+      </div>
+      <div className="settings-bar">
         <span className="meta meta-optional">{meta.projectPath}</span>
         <span className="meta meta-optional">{new Date(meta.startedAt).toLocaleString()}</span>
         {meta.model && <span className="badge meta-optional">{meta.model}</span>}
         {meta.gitBranch && <span className="badge meta-optional">{meta.gitBranch}</span>}
-        {meta.parseWarnings.length > 0 && (
-          <span className="badge warn" title={meta.parseWarnings.join('\n')}>
-            {meta.parseWarnings.length} warnings
-          </span>
-        )}
-        <span className="spacer" />
         <span className="meta meta-optional">
           {meta.turnCount} turns · {meta.eventCount} events
         </span>
-        <button onClick={onToggleTheme}>{theme === 'dark' ? '☀' : '☾'}</button>
-      </header>
+      </div>
       <div className="mobile-tabs">
         <button
           className={mobileView === 'reasoning' ? 'active' : ''}

@@ -202,14 +202,15 @@ function toolUseToEvent(
       if (mutatePath) {
         return { ...base, kind: 'mutate', path: mutatePath, toolName: name };
       }
-      if (!KNOWN_OTHER_TOOLS.has(name)) warnings.push(`unmapped tool "${name}" rendered as generic event`);
+      const unmapped = !KNOWN_OTHER_TOOLS.has(name);
+      if (unmapped) warnings.push(`unmapped tool "${name}" rendered as generic event`);
       let summary = '';
       try {
         summary = JSON.stringify(input);
       } catch {
         summary = '[unserializable input]';
       }
-      return { ...base, kind: 'other', toolName: name, summary: truncate(summary, 500) };
+      return { ...base, kind: 'other', toolName: name, summary: truncate(summary, 500), warned: unmapped };
     }
   }
 }

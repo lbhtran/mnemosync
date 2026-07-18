@@ -105,7 +105,10 @@ export type FileEvent = FileEventBase &
       }
     | { kind: 'bash'; command: string; output?: string; mutating: boolean }
     | { kind: 'subagent'; agentId: string; description: string }
-    | { kind: 'other'; toolName: string; summary: string }
+    // warned: true when this tool wasn't one we deliberately mapped to
+    // 'other' (KNOWN_OTHER_TOOLS) — a generic event for an unrecognized
+    // tool, worth flagging in the replay rather than blending in silently.
+    | { kind: 'other'; toolName: string; summary: string; warned?: boolean }
     // A tool that mutates a file we don't have a precise diff for (e.g.
     // MultiEdit, NotebookEdit, or any future tool taking file_path/
     // notebook_path) — content isn't updated, but the file is marked

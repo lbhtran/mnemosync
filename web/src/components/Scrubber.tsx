@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import type { FlatEvent } from '../playback/reconstruct';
 import type { Playback, Speed } from '../playback/usePlayback';
-import { ERROR_GLYPH, KIND_GLYPH } from '../eventMeta';
+import { ERROR_GLYPH, KIND_GLYPH, WARN_GLYPH } from '../eventMeta';
 
 const SPEEDS: Speed[] = [0.5, 1, 2, 4];
 
@@ -15,6 +15,10 @@ function markerFor(e: FlatEvent): { cls: string; glyph: string } | undefined {
       return { cls: 'edit', glyph: KIND_GLYPH[e.event.kind] };
     case 'bash':
       return { cls: 'bash', glyph: KIND_GLYPH.bash };
+    case 'other':
+      // An unrecognized tool rendered as a generic event — flag it rather
+      // than blending in silently among ordinary 'other' events.
+      return e.event.warned ? { cls: 'warn', glyph: WARN_GLYPH } : undefined;
     default:
       return undefined;
   }
@@ -117,6 +121,7 @@ export function Scrubber({ playback }: { playback: Playback }) {
         <span style={{ color: 'var(--accent)' }}>{KIND_GLYPH.edit}{KIND_GLYPH.write}{KIND_GLYPH.mutate} edits</span>
         <span style={{ color: 'var(--bash)' }}>{KIND_GLYPH.bash} bash</span>
         <span style={{ color: 'var(--error)' }}>{ERROR_GLYPH} errors</span>
+        <span style={{ color: 'var(--accent)' }}>{WARN_GLYPH} unrecognized tool</span>
         <span style={{ color: 'var(--thinking)' }}>│ compaction</span>
       </div>
     </div>
