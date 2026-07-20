@@ -272,6 +272,44 @@ input:focus { border-color: var(--accent); }
 }
 .interstitial .card .label { color: var(--accent); font-size: 11px; margin-bottom: 8px; letter-spacing: 1px; }
 
+.tool-popup {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(2px);
+}
+.tool-popup .card {
+  max-width: 560px; max-height: 65%; overflow-y: auto;
+  background: var(--bg-raised); border: 1px solid var(--accent);
+  border-radius: 8px; padding: 18px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+}
+.tool-popup.err .card { border-color: var(--error); }
+.tool-popup .label { color: var(--accent); font-size: 11px; margin-bottom: 8px; letter-spacing: 1px; }
+.tool-popup .query { font-weight: 600; word-break: break-word; }
+.tool-popup a.query { display: block; color: var(--bash); text-decoration: none; }
+.tool-popup a.query:hover { text-decoration: underline; }
+.tool-popup .fetch-prompt { color: var(--text-dim); font-size: 12px; margin-top: 8px; }
+.tool-popup .results { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tool-popup .results a { color: var(--bash); font-size: 12.5px; word-break: break-all; text-decoration: none; }
+.tool-popup .results a:hover { text-decoration: underline; }
+.tool-popup pre {
+  background: var(--bg-inset); padding: 8px; border-radius: 4px;
+  overflow-x: auto; margin: 12px 0 0; font-size: 12px; max-height: 260px; overflow-y: auto;
+  white-space: pre-wrap; word-break: break-word;
+}
+.tool-popup .question-block { margin-top: 14px; }
+.tool-popup .question-block:first-child { margin-top: 0; }
+.tool-popup .options { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tool-popup .options li {
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12.5px;
+}
+.tool-popup .options li.selected {
+  border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+.tool-popup .opt-label { font-weight: 600; }
+.tool-popup .opt-desc { display: block; color: var(--text-dim); font-size: 11.5px; margin-top: 2px; }
+
 /* ---------- scrubber ---------- */
 .scrubber-bar {
   border-top: 1px solid var(--border); background: var(--bg-raised);

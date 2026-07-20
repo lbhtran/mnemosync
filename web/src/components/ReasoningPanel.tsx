@@ -19,6 +19,12 @@ function eventLabel(ev: FileEvent): string {
       return `${KIND_GLYPH.bash} ${ev.command.split('\n')[0].slice(0, 48)}`;
     case 'subagent':
       return `${KIND_GLYPH.subagent} agent: ${ev.description.slice(0, 40)}`;
+    case 'websearch':
+      return `${KIND_GLYPH.websearch} ${ev.query.slice(0, 48)}`;
+    case 'webfetch':
+      return `${KIND_GLYPH.webfetch} ${ev.url.slice(0, 48)}`;
+    case 'question':
+      return `${KIND_GLYPH.question} ${(ev.questions[0]?.header || ev.questions[0]?.question || 'question').slice(0, 40)}`;
     default:
       return `${KIND_GLYPH.other} ${ev.toolName}`;
   }

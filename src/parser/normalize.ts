@@ -183,6 +183,30 @@ function toolUseToEvent(
       const command = str(input.command) ?? '';
       return { ...base, kind: 'bash', command, mutating: MUTATING_BASH.test(command) };
     }
+    case 'WebSearch':
+      return { ...base, kind: 'websearch', query: str(input.query) ?? '' };
+    case 'WebFetch':
+      return { ...base, kind: 'webfetch', url: str(input.url) ?? '', prompt: str(input.prompt) ?? '' };
+    case 'AskUserQuestion': {
+      const questions = Array.isArray(input.questions)
+        ? (input.questions as unknown[]).map((q) => {
+            const qq = (q ?? {}) as Record<string, unknown>;
+            const options = Array.isArray(qq.options)
+              ? (qq.options as unknown[]).map((o) => {
+                  const oo = (o ?? {}) as Record<string, unknown>;
+                  return { label: str(oo.label) ?? '', description: str(oo.description) };
+                })
+              : [];
+            return {
+              question: str(qq.question) ?? '',
+              header: str(qq.header) ?? '',
+              options,
+              multiSelect: qq.multiSelect === true,
+            };
+          })
+        : [];
+      return { ...base, kind: 'question', questions };
+    }
     case 'Task':
     case 'Agent':
       return {
@@ -217,8 +241,8 @@ function toolUseToEvent(
 
 // Tools we deliberately map to 'other' — no warning noise for these.
 const KNOWN_OTHER_TOOLS = new Set([
-  'Grep', 'Glob', 'WebFetch', 'WebSearch', 'TodoWrite', 'TodoRead', 'Skill',
-  'AskUserQuestion', 'ToolSearch', 'TaskCreate', 'TaskUpdate', 'TaskList',
+  'Grep', 'Glob', 'TodoWrite', 'TodoRead', 'Skill',
+  'ToolSearch', 'TaskCreate', 'TaskUpdate', 'TaskList',
   'TaskGet', 'TaskOutput', 'TaskStop', 'ExitPlanMode',
   'EnterPlanMode', 'SendMessage', 'Artifact', 'SendUserFile',
 ]);
@@ -252,8 +276,46 @@ function enrichEvent(ev: FileEvent, res: ToolResultInfo): FileEvent {
   } else if (ev.kind === 'subagent' && s) {
     const agentId = str(s.agentId) ?? str(s.taskId);
     if (agentId) ev.agentId = agentId;
+  } else if (ev.kind === 'websearch' && s) {
+    const links = extractWebSearchResults(s);
+    if (links) ev.results = links;
+  } else if (ev.kind === 'webfetch' && s) {
+    const result = str(s.result);
+    if (result !== undefined) {
+      ev.content = truncate(result, MAX_BASH_OUTPUT);
+      ev.truncated = isOverLimit(result, MAX_BASH_OUTPUT);
+    }
+  } else if (ev.kind === 'question' && s && s.answers && typeof s.answers === 'object') {
+    const answers: Record<string, string | string[]> = {};
+    for (const [q, v] of Object.entries(s.answers as Record<string, unknown>)) {
+      answers[q] = Array.isArray(v) ? v.map((x) => str(x) ?? '') : (str(v) ?? '');
+    }
+    ev.answers = answers;
   }
   return ev;
+}
+
+// toolUseResult.results for WebSearch mixes shapes: some entries are
+// { content: [{title, url}, ...] }, others are a plain summary string —
+// flatten out just the link entries, since the summary text duplicates
+// (and appends an internal instruction to) what's already in the turn's
+// reasoning.
+function extractWebSearchResults(s: Record<string, unknown>): { title: string; url: string }[] | undefined {
+  const raw = s.results;
+  if (!Array.isArray(raw)) return undefined;
+  const links: { title: string; url: string }[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const content = (entry as Record<string, unknown>).content;
+    if (!Array.isArray(content)) continue;
+    for (const item of content) {
+      if (!item || typeof item !== 'object') continue;
+      const url = str((item as Record<string, unknown>).url);
+      if (!url) continue;
+      links.push({ title: str((item as Record<string, unknown>).title) ?? url, url });
+    }
+  }
+  return links.length > 0 ? links : undefined;
 }
 
 export interface NormalizeOptions {

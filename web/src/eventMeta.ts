@@ -14,6 +14,9 @@ export const KIND_GLYPH: Record<FileEventKind, string> = {
   bash: '●',
   subagent: '⛭',
   mutate: '✱',
+  websearch: '🔍',
+  webfetch: '🌐',
+  question: '❓',
   other: '◦',
 };
 

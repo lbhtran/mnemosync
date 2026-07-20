@@ -10,6 +10,7 @@ export type Speed = 0.5 | 1 | 2 | 4;
 
 const BASE_EVENT_MS = 1600;
 const INTERSTITIAL_MS = 2200;
+const POS_KEY_PREFIX = 'mnemosyne:pos:';
 
 export interface Playback {
   events: FlatEvent[];
@@ -34,7 +35,7 @@ export interface Playback {
   setSpeed(s: Speed): void;
 }
 
-export function usePlayback(timeline: Timeline | undefined): Playback {
+export function usePlayback(timeline: Timeline | undefined, storageKey?: string): Playback {
   const events = useMemo(() => (timeline ? flattenEvents(timeline) : []), [timeline]);
   const engine = useMemo(() => new ReconstructionEngine(events), [events]);
   const [index, setIndex] = useState(-1);
@@ -42,7 +43,43 @@ export function usePlayback(timeline: Timeline | undefined): Playback {
   const [speed, setSpeed] = useState<Speed>(1);
   const [interstitial, setInterstitial] = useState<Playback['interstitial']>();
   const [animate, setAnimate] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
+  const restoredRef = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
+
+  // Resume where the user left off on refresh: restore position (and
+  // playing state) once the timeline's events are available, keyed per
+  // session/subagent so switching sessions doesn't cross-contaminate.
+  useEffect(() => {
+    if (restoredRef.current || events.length === 0 || !storageKey) return;
+    restoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(POS_KEY_PREFIX + storageKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as { index?: number; playing?: boolean };
+        if (typeof saved.index === 'number' && saved.index >= -1 && saved.index < events.length) {
+          setIndex(saved.index);
+          setAnimate(false);
+          if (saved.playing) setPlaying(true);
+        }
+      }
+    } catch {
+      // localStorage unavailable (private mode, quota) — just start fresh
+    }
+    setHydrated(true);
+  }, [events.length, storageKey]);
+
+  // Persist on every position change — cheap (a few bytes), and skipped
+  // until hydration above has had a chance to apply the restored value
+  // first, so we don't immediately clobber it with the pre-restore -1.
+  useEffect(() => {
+    if (!hydrated || !storageKey) return;
+    try {
+      localStorage.setItem(POS_KEY_PREFIX + storageKey, JSON.stringify({ index, playing }));
+    } catch {
+      // storage unavailable — position just won't survive a refresh
+    }
+  }, [hydrated, storageKey, index, playing]);
 
   const snapshot = useMemo(() => engine.stateAt(index), [engine, index]);
   const prevSnapshot = useMemo(() => engine.stateAt(index - 1), [engine, index]);

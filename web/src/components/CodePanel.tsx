@@ -96,6 +96,99 @@ function EventOverlay({ event }: { event: FileEvent }) {
       </div>
     );
   }
+  if (event.kind === 'websearch') {
+    return (
+      <div className={`tool-popup${event.isError ? ' err' : ''}`}>
+        <div className="card">
+          <div className="label">{KIND_GLYPH.websearch} web search</div>
+          <div className="query">{event.query}</div>
+          {event.isError ? (
+            <div style={{ color: 'var(--error)', marginTop: 8 }}>
+              ⚠ search failed{event.errorMessage ? `: ${event.errorMessage.slice(0, 200)}` : ''}
+            </div>
+          ) : event.results && event.results.length > 0 ? (
+            <ul className="results">
+              {event.results.map((r, i) => (
+                <li key={i}>
+                  <a href={r.url} target="_blank" rel="noreferrer noopener">
+                    {r.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div style={{ color: 'var(--text-dim)', marginTop: 8, fontSize: 12 }}>
+              no results captured
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  if (event.kind === 'webfetch') {
+    const content = event.content ?? '';
+    return (
+      <div className={`tool-popup${event.isError ? ' err' : ''}`}>
+        <div className="card">
+          <div className="label">{KIND_GLYPH.webfetch} web fetch</div>
+          <a className="query" href={event.url} target="_blank" rel="noreferrer noopener">
+            {event.url}
+          </a>
+          {event.prompt && <div className="fetch-prompt">{event.prompt}</div>}
+          {event.isError ? (
+            <div style={{ color: 'var(--error)', marginTop: 8 }}>
+              ⚠ fetch failed{event.errorMessage ? `: ${event.errorMessage.slice(0, 200)}` : ''}
+            </div>
+          ) : content ? (
+            <pre onClick={() => setExpanded((e) => !e)} style={{ cursor: 'pointer' }}>
+              {expanded || content.length < 600 ? content : content.slice(0, 600) + '\n… (click to expand)'}
+            </pre>
+          ) : (
+            <div style={{ color: 'var(--text-dim)', marginTop: 8, fontSize: 12 }}>
+              no content captured
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  if (event.kind === 'question') {
+    return (
+      <div className={`tool-popup${event.isError ? ' err' : ''}`}>
+        <div className="card">
+          <div className="label">{KIND_GLYPH.question} question</div>
+          {event.questions.map((q, qi) => {
+            const rawAnswer = event.answers?.[q.question];
+            const answers = Array.isArray(rawAnswer) ? rawAnswer : rawAnswer !== undefined ? [rawAnswer] : [];
+            const knownLabels = new Set(q.options.map((o) => o.label));
+            const customAnswers = answers.filter((a) => !knownLabels.has(a));
+            return (
+              <div className="question-block" key={qi}>
+                <div className="query">{q.question}</div>
+                <ul className="options">
+                  {q.options.map((o, oi) => (
+                    <li key={oi} className={answers.includes(o.label) ? 'selected' : ''}>
+                      <span className="opt-label">
+                        {answers.includes(o.label) ? '✓ ' : ''}
+                        {o.label}
+                      </span>
+                      {o.description && <span className="opt-desc">{o.description}</span>}
+                    </li>
+                  ))}
+                  {customAnswers.map((a, ai) => (
+                    <li key={`custom-${ai}`} className="selected">
+                      <span className="opt-label">✓ {a}</span>
+                      <span className="opt-desc">custom answer</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
   if (event.kind === 'other') {
     return (
       <div className={`event-overlay${event.isError ? ' err' : ''}`}>
