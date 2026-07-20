@@ -21,7 +21,7 @@ export function Replay({
   const [timeline, setTimeline] = useState<Timeline>();
   const [error, setError] = useState<string>();
   const [mobileView, setMobileView] = useState<'reasoning' | 'code'>('code');
-  const playback = usePlayback(timeline);
+  const playback = usePlayback(timeline, agentId ? `${sessionId}/${agentId}` : sessionId);
 
   useEffect(() => {
     fetchTimeline(sessionId, agentId)

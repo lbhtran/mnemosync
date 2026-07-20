@@ -105,6 +105,21 @@ export type FileEvent = FileEventBase &
       }
     | { kind: 'bash'; command: string; output?: string; mutating: boolean }
     | { kind: 'subagent'; agentId: string; description: string }
+    | { kind: 'websearch'; query: string; results?: { title: string; url: string }[] }
+    | { kind: 'webfetch'; url: string; prompt: string; content?: string; truncated?: boolean }
+    | {
+        kind: 'question';
+        questions: {
+          question: string;
+          header: string;
+          options: { label: string; description?: string }[];
+          multiSelect?: boolean;
+        }[];
+        // keyed by question text, matching the AskUserQuestion result shape.
+        // Array for multiSelect; a single string may be a known option's
+        // label or free text typed via "Other".
+        answers?: Record<string, string | string[]>;
+      }
     // warned: true when this tool wasn't one we deliberately mapped to
     // 'other' (KNOWN_OTHER_TOOLS) — a generic event for an unrecognized
     // tool, worth flagging in the replay rather than blending in silently.

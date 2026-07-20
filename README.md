@@ -97,6 +97,10 @@ ever sees.
 - **Compaction boundaries** (`system/compact_boundary`) are marked on the
   timeline; earlier state may be unreconstructable and is treated as a fresh
   start.
+- **Position survives a refresh.** Playback position and play/pause state
+  are persisted to `localStorage` per session/subagent
+  (`web/src/playback/usePlayback.ts`), so reloading the page resumes where
+  you left off instead of restarting from the first event.
 
 ### Visual language
 
@@ -119,6 +123,10 @@ ever sees.
   second, and secondary metadata (project path, timestamp, model, branch,
   turn/event counts) on a third — so the toggle stays reachable and a long
   session title doesn't crowd it out.
+- `WebSearch`, `WebFetch`, and `AskUserQuestion` each open as their own
+  centered popup over the code panel — query/URL/question plus the actual
+  result (links, fetched content, or the option the user picked) — instead
+  of being lumped into the generic tool overlay as a raw JSON dump.
 - An unrecognized tool rendered as a generic event (`⚠`, legend: "unrecognized
   tool") gets its own scrubber marker, distinct from the edit/bash/error
   markers — it's the one parser diagnostic that maps onto an actual replay
