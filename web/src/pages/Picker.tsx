@@ -61,7 +61,7 @@ export function Picker({
     return (
       <div className="error-page">
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
-        <div>mnemosyne</div>
+        <div>mnemosync</div>
         <div className="msg">{error}</div>
       </div>
     );
@@ -78,7 +78,7 @@ export function Picker({
   return (
     <div className="picker">
       <div style={{ display: 'flex', alignItems: 'baseline' }}>
-        <h1>mnemosyne</h1>
+        <h1>mnemosync</h1>
         <span className="spacer" style={{ flex: 1 }} />
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} />
       </div>

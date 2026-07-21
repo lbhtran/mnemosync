@@ -10,7 +10,7 @@ export type Speed = 0.5 | 1 | 2 | 4;
 
 const BASE_EVENT_MS = 1600;
 const INTERSTITIAL_MS = 2200;
-const POS_KEY_PREFIX = 'mnemosyne:pos:';
+const POS_KEY_PREFIX = 'mnemosync:pos:';
 
 export interface Playback {
   events: FlatEvent[];

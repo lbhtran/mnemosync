@@ -20,7 +20,7 @@ function parseHash(): Route {
 export function App() {
   const [route, setRoute] = useState<Route>(parseHash);
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('mnemosyne-theme') as 'dark' | 'light') ?? 'dark',
+    () => (localStorage.getItem('mnemosync-theme') as 'dark' | 'light') ?? 'dark',
   );
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem('mnemosyne-theme', theme);
+    localStorage.setItem('mnemosync-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
