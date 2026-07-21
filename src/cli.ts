@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// mnemosyne CLI: `mnemosyne` starts the viewer,
-// `mnemosyne summary <session-id|path.jsonl>` prints a text summary (M1).
+// mnemosync CLI: `mnemosync` starts the viewer,
+// `mnemosync summary <session-id|path.jsonl>` prints a text summary (M1).
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -43,12 +43,12 @@ function parseArgs(argv: string[]): Args {
 }
 
 function printHelp(): void {
-  console.log(`mnemosyne — replay Claude Code sessions as an animated timeline
+  console.log(`mnemosync — replay Claude Code sessions as an animated timeline
 
 Usage:
-  mnemosyne [options]                 start the viewer (opens browser)
-  mnemosyne summary <session|file>    print a text summary of a session
-  mnemosyne list                      list discovered projects/sessions
+  mnemosync [options]                 start the viewer (opens browser)
+  mnemosync summary <session|file>    print a text summary of a session
+  mnemosync list                      list discovered projects/sessions
 
 Options:
   --claude-dir <path>   Claude data dir (default: ~/.claude)
@@ -71,7 +71,7 @@ function openBrowser(url: string): void {
 async function summarize(args: Args): Promise<void> {
   const target = args.positional[0];
   if (!target) {
-    console.error('usage: mnemosyne summary <session-id|path.jsonl>');
+    console.error('usage: mnemosync summary <session-id|path.jsonl>');
     process.exit(1);
   }
   let file = target;
@@ -126,7 +126,7 @@ async function main(): Promise<void> {
     allowNonLoopback: args.lan,
   });
   const url = `http://127.0.0.1:${port}`;
-  console.log(`mnemosyne running at ${url}  (claude dir: ${args.claudeDir})`);
+  console.log(`mnemosync running at ${url}  (claude dir: ${args.claudeDir})`);
   if (args.lan) {
     console.log(
       `--lan: also listening on all interfaces (port ${port}) — anyone on your network can read your session transcripts`,

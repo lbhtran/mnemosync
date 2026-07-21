@@ -82,7 +82,7 @@ export function startServer(opts: ServerOptions): Promise<{ port: number; close:
   const loopback = opts.host === '127.0.0.1' || opts.host === 'localhost';
   if (!loopback && !opts.allowNonLoopback) {
     throw new Error(
-      'mnemosyne serves private session data and binds 127.0.0.1 by default; pass --lan to expose it to your network',
+      'mnemosync serves private session data and binds 127.0.0.1 by default; pass --lan to expose it to your network',
     );
   }
   const webDist =
@@ -161,7 +161,7 @@ function serveStatic(res: ServerResponse, webDist: string, urlPath: string): voi
   if (!existsSync(webDist)) {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     res.end(
-      '<h1>mnemosyne</h1><p>Frontend not built. Run <code>npm run build</code> in <code>web/</code>. The API is live under <code>/api/</code>.</p>',
+      '<h1>mnemosync</h1><p>Frontend not built. Run <code>npm run build</code> in <code>web/</code>. The API is live under <code>/api/</code>.</p>',
     );
     return;
   }

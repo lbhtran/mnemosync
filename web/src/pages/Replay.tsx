@@ -33,7 +33,7 @@ export function Replay({
         // meaningful to show them in the UI. Console is for debugging a
         // parser issue, not a user-facing signal.
         if (t.meta.parseWarnings.length > 0) {
-          console.warn(`mnemosyne: ${t.meta.parseWarnings.length} parse warning(s) for this session:`, t.meta.parseWarnings);
+          console.warn(`mnemosync: ${t.meta.parseWarnings.length} parse warning(s) for this session:`, t.meta.parseWarnings);
         }
       })
       .catch((e) => setError(String(e)));
@@ -69,7 +69,7 @@ export function Replay({
     return (
       <div className="error-page">
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
-        <div>mnemosyne</div>
+        <div>mnemosync</div>
         <div className="msg">{error}</div>
         <a href="#/" style={{ color: 'var(--accent)' }}>
           ← back to sessions
@@ -101,7 +101,7 @@ export function Replay({
     <div className="replay-root" data-mobile-view={mobileView}>
       <header className="app-header">
         <a className="brand" href={agentId ? `#/s/${sessionId}` : '#/'}>
-          {agentId ? '← session' : '← mnemosyne'}
+          {agentId ? '← session' : '← mnemosync'}
         </a>
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
       </header>

@@ -1,6 +1,7 @@
-# mnemosyne
+# mnemosync
 
-> Mnemosyne — Titaness of memory, mother of the Muses.
+> Game tape for your coding agent. The name is a small pun: Mnemosyne, the
+> Titaness of memory — and two panels playing back in sync.
 
 Replay Claude Code sessions as an animated timeline: code changes play back in
 an editor while Claude's reasoning is shown alongside, with scrubber/playback
@@ -28,9 +29,9 @@ npm run dev --prefix web   # vite dev server with /api proxy (port 4573 backend)
 CLI:
 
 ```
-mnemosyne [options]                 start the viewer (opens browser)
-mnemosyne summary <session|file>    print a text summary of a session
-mnemosyne list                      list discovered projects/sessions
+mnemosync [options]                 start the viewer (opens browser)
+mnemosync summary <session|file>    print a text summary of a session
+mnemosync list                      list discovered projects/sessions
 
 --claude-dir <path>   Claude data dir (default: ~/.claude)
 --port <n>            port (default: random free port)
@@ -47,7 +48,7 @@ you trust. For a persistent setup, a systemd unit works well:
 ```ini
 [Service]
 User=you
-ExecStart=/usr/bin/node /path/to/mnemosyne/dist/cli.js --no-open --lan --port 4573
+ExecStart=/usr/bin/node /path/to/mnemosync/dist/cli.js --no-open --lan --port 4573
 Restart=on-failure
 ```
 
@@ -183,4 +184,6 @@ largest real session on the machine, when one exists.
 
 ## License
 
-All Rights Reserved. See [LICENSE](LICENSE).
+PolyForm Noncommercial 1.0.0 — free to use, modify, and fork for
+noncommercial purposes; not for resale or a competing paid/hosted product.
+See [LICENSE](LICENSE).

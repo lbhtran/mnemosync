@@ -1,11 +1,11 @@
 {
-  "name": "mnemosyne",
+  "name": "mnemosync",
   "version": "0.1.0",
-  "description": "Replay Claude Code sessions as an animated timeline — code changes play back in an editor alongside Claude's reasoning.",
-  "license": "UNLICENSED",
+  "description": "Game tape for your coding agent — replay Claude Code sessions as an animated timeline, code alongside reasoning.",
+  "license": "LicenseRef-PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "bin": {
-    "mnemosyne": "dist/cli.js"
+    "mnemosync": "dist/cli.js"
   },
   "files": [
     "dist",
