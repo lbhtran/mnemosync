@@ -1,0 +1,15 @@
+<svg width="440" height="120" viewBox="0 0 440 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="mnemosync — game tape for your coding agent">
+  <rect x="1" y="1" width="438" height="118" rx="16" fill="#1b1824" stroke="#2e2938" stroke-width="1"/>
+
+  <g transform="translate(28,28)">
+    <line x1="8" y1="32" x2="56" y2="32" stroke="#5f4f30" stroke-width="2"/>
+    <line x1="19" y1="24" x2="19" y2="40" stroke="#8a7350" stroke-width="2" stroke-linecap="round"/>
+    <line x1="30" y1="18" x2="30" y2="46" stroke="#8a7350" stroke-width="2" stroke-linecap="round"/>
+    <line x1="40" y1="14" x2="40" y2="50" stroke="#e8c182" stroke-width="2"/>
+    <circle cx="40" cy="32" r="8" fill="#121018" stroke="#c9a15e" stroke-width="2.5"/>
+    <circle cx="40" cy="32" r="2.75" fill="#e8c182"/>
+  </g>
+
+  <text x="128" y="58" font-family="Palatino Linotype, Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="32" fill="#c9a15e" letter-spacing="1">mnemosync</text>
+  <text x="128" y="82" font-family="Palatino Linotype, Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-style="italic" font-size="14" fill="#a79f8c">Game tape for your coding agent.</text>
+</svg>
