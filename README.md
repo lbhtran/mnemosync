@@ -1,7 +1,9 @@
-# mnemosync
+<p align="center">
+  <img src="docs/brand/lockup.svg" alt="mnemosync — game tape for your coding agent" width="360">
+</p>
 
-> Game tape for your coding agent. The name is a small pun: Mnemosyne, the
-> Titaness of memory — and two panels playing back in sync.
+The name is a small pun: Mnemosyne, the Titaness of memory — and two panels
+playing back in sync.
 
 Replay Claude Code sessions as an animated timeline: code changes play back in
 an editor while Claude's reasoning is shown alongside, with scrubber/playback
@@ -11,20 +13,19 @@ Fully local. No network calls, no telemetry, no uploads — the server binds
 `127.0.0.1` by default; exposing it to your LAN requires the explicit
 `--lan` flag.
 
-## Quick start
+## Getting started
 
 ```bash
-npm install
-npm run build          # builds server (tsc) + frontend (vite)
-node dist/cli.js       # starts the viewer and opens your browser
+git clone https://github.com/lbhtran/mnemosync.git
+cd mnemosync
+npm install -g .        # builds the CLI + web bundle, then links it globally
+mnemosync               # starts the viewer and opens your browser
 ```
 
-Or during development:
-
-```bash
-npm run dev            # backend on a random port, --no-open
-npm run dev --prefix web   # vite dev server with /api proxy (port 4573 backend)
-```
+`npm install -g .` also works as `npm install -g github:lbhtran/mnemosync`
+for anyone with access to the (currently private) repo — a `prepare` script
+builds the server and frontend automatically on install, no separate build
+step needed.
 
 CLI:
 
@@ -50,6 +51,15 @@ you trust. For a persistent setup, a systemd unit works well:
 User=you
 ExecStart=/usr/bin/node /path/to/mnemosync/dist/cli.js --no-open --lan --port 4573
 Restart=on-failure
+```
+
+## Development
+
+```bash
+npm install
+npm run build              # builds server (tsc) + frontend (vite)
+npm run dev                 # backend on a random port, --no-open
+npm run dev --prefix web    # vite dev server with /api proxy (port 4573 backend)
 ```
 
 ## How it works
