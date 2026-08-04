@@ -2,7 +2,7 @@
   "name": "mnemosync",
   "version": "0.1.0",
   "description": "Game tape for your coding agent — replay Claude Code sessions as an animated timeline, code alongside reasoning.",
-  "license": "LicenseRef-PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "mnemosync": "dist/cli.js"

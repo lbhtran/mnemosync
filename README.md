@@ -194,6 +194,4 @@ largest real session on the machine, when one exists.
 
 ## License
 
-PolyForm Noncommercial 1.0.0 — free to use, modify, and fork for
-noncommercial purposes; not for resale or a competing paid/hosted product.
-See [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
