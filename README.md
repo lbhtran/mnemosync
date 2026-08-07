@@ -18,14 +18,19 @@ Fully local. No network calls, no telemetry, no uploads — the server binds
 ```bash
 git clone https://github.com/lbhtran/mnemosync.git
 cd mnemosync
-npm install -g .        # builds the CLI + web bundle, then links it globally
+npm install             # installs deps and builds the CLI + web bundle
+npm link                # puts `mnemosync` on your PATH
 mnemosync               # starts the viewer and opens your browser
 ```
 
-`npm install -g .` also works as `npm install -g github:lbhtran/mnemosync`
-for anyone with access to the (currently private) repo — a `prepare` script
-builds the server and frontend automatically on install, no separate build
-step needed.
+Both steps are needed. `npm install` is what builds `dist/` and `web/dist/`
+(via the `prepare` script); `npm link` then exposes the built CLI globally.
+
+> **Don't use `npm install -g .` or `npm install -g github:lbhtran/mnemosync`.**
+> Both run the build before installing this package's own dependencies, so
+> `tsc` isn't available yet and the build fails with `cannot find name
+> 'node:child_process'`. The git-URL form is worse — it reports success while
+> installing an incomplete package with no `dist/` and a broken binary.
 
 CLI:
 
