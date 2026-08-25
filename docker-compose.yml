@@ -1,0 +1,12 @@
+services:
+  mnemosync:
+    build: .
+    container_name: mnemosync
+    user: "1000:1000"
+    environment:
+      - HOME=/home/alexx78
+    volumes:
+      - /home/alexx78/.claude:/home/alexx78/.claude:ro
+    ports:
+      - "192.168.1.212:4573:4573"
+    restart: unless-stopped

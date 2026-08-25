@@ -58,6 +58,17 @@ ExecStart=/usr/bin/node /path/to/mnemosync/dist/cli.js --no-open --lan --port 45
 Restart=on-failure
 ```
 
+Or run it in Docker instead of systemd — `Dockerfile` + `docker-compose.yml` are included:
+
+```bash
+docker compose up -d
+```
+
+The compose file bind-mounts `~/.claude` read-only and binds the container to
+your LAN IP on port 4573 (equivalent to the `--lan --port 4573` systemd
+example above) — edit the `volumes`/`ports`/`user` entries for your own UID
+and paths before running it.
+
 ## Development
 
 ```bash
