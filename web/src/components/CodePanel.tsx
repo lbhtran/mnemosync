@@ -352,7 +352,7 @@ export function CodePanel({
     fontSize: 12.5,
     scrollBeyondLastLine: false,
     renderWhitespace: 'none',
-    wordWrap: 'off',
+    wordWrap: active && languageFor(active) === 'markdown' ? 'on' : 'off',
     domReadOnly: true,
   };
 

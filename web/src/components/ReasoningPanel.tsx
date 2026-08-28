@@ -68,9 +68,31 @@ const TurnCard = memo(function TurnCard({
   onSeekEvent: (eventId: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const chipRefs = useRef<Record<string, HTMLSpanElement | null>>({});
+  // Cache one ref-callback per event id so React doesn't see a "new" ref
+  // function (and re-attach it) on every render — only chipRefs.current
+  // mutates, never the callback identity.
+  const chipRefSetters = useRef<Record<string, (el: HTMLSpanElement | null) => void>>({});
+  const getChipRefSetter = (id: string) => {
+    let setter = chipRefSetters.current[id];
+    if (!setter) {
+      setter = (el) => {
+        chipRefs.current[id] = el;
+      };
+      chipRefSetters.current[id] = setter;
+    }
+    return setter;
+  };
+
+  // Re-centers on the current position whenever it moves — autoplay tick,
+  // step, scrub, or a chip click — so a manual scroll away doesn't stick;
+  // the next position change brings the view back. `block: 'nearest'` is a
+  // no-op if it's already visible, so it doesn't fight active reading.
   useEffect(() => {
-    if (isActive) ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [isActive]);
+    if (!isActive) return;
+    const target = currentEventId ? chipRefs.current[currentEventId] : undefined;
+    (target ?? ref.current)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [isActive, currentEventId]);
 
   return (
     <div className={`turn-card${isActive ? ' active' : ''}`} ref={ref}>
@@ -97,6 +119,7 @@ const TurnCard = memo(function TurnCard({
           {turn.events.map((ev) => (
             <span
               key={ev.id}
+              ref={getChipRefSetter(ev.id)}
               className={`chip${ev.id === currentEventId ? ' current' : ''}${ev.isError ? ' err' : ''}`}
               title={ev.isError ? `error: ${ev.errorMessage ?? ''}` : ev.rawToolName}
               onClick={() => onSeekEvent(ev.id)}
