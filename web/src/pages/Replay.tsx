@@ -6,6 +6,7 @@ import { ReasoningPanel } from '../components/ReasoningPanel';
 import { CodePanel } from '../components/CodePanel';
 import { Scrubber } from '../components/Scrubber';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { LogoMark } from '../components/Logo';
 
 export function Replay({
   sessionId,
@@ -69,7 +70,10 @@ export function Replay({
     return (
       <div className="error-page">
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
-        <div>mnemosync</div>
+        <div className="brand-row">
+          <LogoMark size={16} />
+          mnemosync
+        </div>
         <div className="msg">{error}</div>
         <a href="#/" style={{ color: 'var(--accent)' }}>
           ← back to sessions
@@ -80,7 +84,10 @@ export function Replay({
     return (
       <div className="loading">
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
-        parsing session…
+        <div className="brand-row">
+          <LogoMark size={16} />
+          parsing session…
+        </div>
       </div>
     );
   }
@@ -101,7 +108,13 @@ export function Replay({
     <div className="replay-root" data-mobile-view={mobileView}>
       <header className="app-header">
         <a className="brand" href={agentId ? `#/s/${sessionId}` : '#/'}>
-          {agentId ? '← session' : '← mnemosync'}
+          {agentId ? (
+            '← session'
+          ) : (
+            <>
+              <LogoMark size={16} /> mnemosync
+            </>
+          )}
         </a>
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
       </header>

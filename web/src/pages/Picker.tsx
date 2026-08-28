@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ProjectInfo, SessionInfo } from '../../../src/shared/types';
 import { fetchProjects, fetchSessions } from '../api';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Logo, LogoMark } from '../components/Logo';
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -61,7 +62,10 @@ export function Picker({
     return (
       <div className="error-page">
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
-        <div>mnemosync</div>
+        <div className="brand-row">
+          <LogoMark size={16} />
+          mnemosync
+        </div>
         <div className="msg">{error}</div>
       </div>
     );
@@ -70,15 +74,18 @@ export function Picker({
     return (
       <div className="loading">
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} compact />
-        discovering sessions…
+        <div className="brand-row">
+          <LogoMark size={16} />
+          discovering sessions…
+        </div>
       </div>
     );
   }
 
   return (
     <div className="picker">
-      <div style={{ display: 'flex', alignItems: 'baseline' }}>
-        <h1>mnemosync</h1>
+      <div className="brand-row">
+        <Logo size={28} />
         <span className="spacer" style={{ flex: 1 }} />
         <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} />
       </div>

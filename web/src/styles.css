@@ -100,7 +100,17 @@ input:focus { border-color: var(--accent); }
   background: var(--bg-raised);
   white-space: nowrap;
 }
-.app-header .brand { color: var(--accent); font-weight: 700; text-decoration: none; letter-spacing: 0.5px; }
+.app-header .brand {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--accent); font-weight: 700; text-decoration: none; letter-spacing: 0.5px;
+}
+
+/* ---------- brand / logo ---------- */
+.brand-row { display: flex; align-items: center; gap: 10px; }
+.error-page .brand-row, .loading .brand-row { color: var(--text-dim); }
+.logo { display: inline-flex; align-items: center; gap: 10px; }
+.logo-mark { flex-shrink: 0; }
+.logo-word { color: var(--accent); font-size: 20px; font-weight: 700; letter-spacing: 1px; }
 
 /* session title gets its own row so it can wrap/ellipsis independently of
    the nav and toggle above it */
@@ -131,7 +141,6 @@ input:focus { border-color: var(--accent); }
 
 /* ---------- picker ---------- */
 .picker { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
-.picker h1 { color: var(--accent); font-size: 20px; letter-spacing: 1px; }
 .picker .tagline { color: var(--text-dim); margin-bottom: 22px; }
 .project-block { margin-bottom: 26px; }
 .project-head {
